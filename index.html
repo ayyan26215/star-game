@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Catch the Falling Stars</title>
+  <style>
+    body { margin: 0; overflow: hidden; font-family: Arial; background: #000; color: white; }
+    canvas { display: block; background: linear-gradient(to top, #001, #003); }
+    #controls {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 20px;
+    }
+    .btn {
+      width: 60px; height: 60px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      font-size: 24px;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas"></canvas>
+  <div id="controls">
+    <button class="btn" id="left">⟵</button>
+    <button class="btn" id="right">⟶</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let player = { x: canvas.width/2 - 25, y: canvas.height - 80, w: 50, h: 50, speed: 7 };
+    let stars = [];
+    let score = 0;
+
+    function spawnStar() {
+      stars.push({ x: Math.random() * (canvas.width - 20), y: -20, size: 20, speed: 3 + Math.random()*3 });
+    }
+
+    function update() {
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+
+      // Player
+      ctx.fillStyle = "lime";
+      ctx.fillRect(player.x, player.y, player.w, player.h);
+
+      // Stars
+      ctx.fillStyle = "yellow";
+      for (let i = 0; i < stars.length; i++) {
+        let s = stars[i];
+        s.y += s.speed;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.size/2, 0, Math.PI*2);
+        ctx.fill();
+
+        // Collision check
+        if (s.y + s.size > player.y && s.x > player.x && s.x < player.x + player.w) {
+          score++;
+          stars.splice(i,1);
+          i--;
+        } else if (s.y > canvas.height) {
+          stars.splice(i,1);
+          i--;
+        }
+      }
+
+      // Score
+      ctx.fillStyle = "white";
+      ctx.font = "24px Arial";
+      ctx.fillText("Score: " + score, 20, 40);
+    }
+
+    setInterval(spawnStar, 1000);
+    function gameLoop() {
+      update();
+      requestAnimationFrame(gameLoop);
+    }
+    gameLoop();
+
+    // Keyboard controls
+    window.addEventListener("keydown", e => {
+      if (e.key === "ArrowLeft") player.x -= player.speed*2;
+      if (e.key === "ArrowRight") player.x += player.speed*2;
+    });
+
+    // Mobile controls
+    document.getElementById("left").addEventListener("touchstart", () => player.x -= player.speed*2);
+    document.getElementById("right").addEventListener("touchstart", () => player.x += player.speed*2);
+  </script>
+</body>
+</html>
